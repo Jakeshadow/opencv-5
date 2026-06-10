@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenCV 5 Migration Guide: Should You Upgrade from OpenCV 4?</title>
+<meta name="description" content="OpenCV 5 ships a new DNN engine (80%+ ONNX) and native LLM/VLM inference, with classic fallback. What breaks, what's worth upgrading, and API migration diffs.">
+<link rel="canonical" href="https://opencv5guide.com/">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+  --danger: #f85149; --warn: #d2991d; --ok: #3fb950;
+  --code-bg: #1c2128; --radius: 6px; --max-w: 820px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  padding: 0 1rem 3rem;
+}
+nav {
+  max-width: var(--max-w); margin: 0 auto; padding: 1.2rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+}
+nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav a:hover { color: var(--accent); }
+.logo { font-weight: 600; color: var(--text); font-size: 1rem; }
+.logo span { color: var(--ok); }
+main { max-width: var(--max-w); margin: 0 auto; }
+.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+.eta { color: var(--ok); font-weight: 600; }
+h1 { font-size: 2rem; line-height: 1.3; margin-bottom: .6rem; }
+h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+p { margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.priority-tag { display: inline-block; padding: .15rem .5rem; border-radius: 3px; font-size: .8rem; font-weight: 600; margin-right: .3rem; }
+.tag-p0 { background: rgba(248,81,73,.15); color: var(--danger); }
+.tag-p1 { background: rgba(210,153,29,.15); color: var(--warn); }
+.tag-p2 { background: rgba(139,148,158,.15); color: var(--muted); }
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.2rem; overflow-x: auto;
+  font-size: .88rem; line-height: 1.55; margin: .8rem 0 1.2rem;
+}
+code { font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: .88rem; }
+:not(pre) > code {
+  background: var(--code-bg); padding: .12rem .35rem; border-radius: 3px;
+  font-size: .85rem; border: 1px solid var(--border);
+}
+.migration-table {
+  width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem;
+  font-size: .88rem;
+}
+.migration-table th {
+  background: var(--surface); text-align: left; padding: .6rem .7rem;
+  border: 1px solid var(--border); font-weight: 600;
+}
+.migration-table td {
+  padding: .55rem .7rem; border: 1px solid var(--border);
+  vertical-align: top;
+}
+.migration-table code { font-size: .82rem; }
+.limitations {
+  background: rgba(248,81,73,.06); border: 1px solid rgba(248,81,73,.18);
+  border-radius: var(--radius); padding: 1.2rem 1.4rem; margin: 1.2rem 0;
+}
+.limitations h3 { color: var(--warn); margin-top: 0; }
+.use-case {
+  background: var(--surface); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.3rem; margin: .8rem 0;
+}
+.use-case h3 { margin-top: 0; }
+details {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: .5rem;
+}
+details summary {
+  padding: .8rem 1rem; cursor: pointer; font-weight: 500; list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::before { content: "▸"; margin-right: .5rem; color: var(--accent); font-size: .8rem; }
+details[open] summary::before { content: "▾"; }
+details .faq-answer { padding: 0 1rem 1rem 2rem; color: var(--muted); }
+details .faq-answer p { color: var(--muted); }
+details .faq-answer code { font-size: .82rem; }
+.rollback {
+  background: rgba(248,81,73,.08); border: 1px solid rgba(248,81,73,.2);
+  border-radius: var(--radius); padding: 1rem 1.3rem; margin: 1.5rem 0 0;
+}
+.rollback strong { color: var(--danger); }
+footer {
+  max-width: var(--max-w); margin: 3rem auto 0; padding-top: 1.5rem;
+  border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem;
+}
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  pre { font-size: .8rem; padding: .8rem; }
+  .migration-table { font-size: .78rem; }
+  .migration-table td, .migration-table th { padding: .4rem .5rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">OpenCV<span>5</span>Guide</a>
+  <div>
+    <a href="#what">What's New</a> &nbsp;
+    <a href="#migrate">Migration</a> &nbsp;
+    <a href="#features">Features</a> &nbsp;
+    <a href="#faq">FAQ</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>OpenCV 5 — Should You Upgrade from OpenCV 4?</h1>
+  <p style="font-size:1.1rem;color:var(--muted);max-width:640px;">
+    OpenCV 5 turns a computer vision library into a <strong style="color:var(--text);">deep learning inference runtime</strong>.
+    New graph-based DNN engine, native LLM/VLM support, modern Python bindings.
+    <span class="eta">Released June 6, 2026</span> — here's what actually breaks and whether it's worth upgrading.
+  </p>
+</section>
+
+<section id="what">
+<h2>What Is OpenCV 5</h2>
+<p>
+  OpenCV 5 is the biggest modernization of the 86k-star, million-daily-install computer vision library in over a decade.
+  The headline: a brand-new <strong>graph-based DNN engine</strong> that jumps ONNX operator coverage from ~22% to 80%+,
+  with native transformer, LLM, and VLM support built in. No PyTorch, no ONNX Runtime — just OpenCV.
+</p>
+<p>
+  For OpenCV 4 developers this means: your <code>cv2.dnn.readNet("model.onnx")</code> still works, but underneath
+  there's a completely new engine that handles dynamic shapes, attention fusion, and models that used to throw
+  "unsupported operator" errors. The new engine runs on <strong>CPU only</strong> (for now), so GPU users stay on
+  the classic engine path via <code>ENGINE_CLASSIC</code>.
+</p>
+<p>
+  The release shipped June 4 (blog) / June 8 (pip). Python bindings are modernized with named arguments.
+  The C API is finally gone. And the docs got a genuine upgrade.
+</p>
+</section>
+
+<section id="why">
+<h2>Why OpenCV 5 Matters</h2>
+
+<h3>1. The DNN engine rewrite fixes the most painful part of OpenCV 4</h3>
+<p>
+  For years, the OpenCV DNN module was a coin flip — export your model to ONNX, point <code>cv2.dnn.readNet()</code>
+  at it, and hope. Operators were missing (22% coverage), dynamic shapes broke everything, and error messages
+  were opaque. v5's new graph engine with shape inference, operator fusion, and FlashAttention-style attention
+  fusion means more models actually load and run. This is what developers have been complaining about on HN for years.
+</p>
+
+<h3>2. Native LLM/VLM support opens a new class of applications</h3>
+<p>
+  You can now run vision-language models entirely inside OpenCV — no PyTorch, no ONNX Runtime, no separate tokenizer
+  library. The VLM inference sample ships with the library. For edge deployments and Python-first CV pipelines that
+  need to add captioning or visual QA, this removes a major dependency headache.
+</p>
+
+<h3>3. Migration is lower-risk than past major versions — if you're on CPU</h3>
+<p>
+  Unlike the 3→4 transition, v5 keeps the classic DNN engine as a fallback (<code>ENGINE_AUTO</code> is default).
+  Python users see almost no API changes — <code>cv2.imread()</code>, <code>cv2.dnn.readNet()</code> all work.
+  The C++ changes are mostly header renames. C++17 is required, and some modules moved to contrib. But for most
+  Python developers, <code>pip install opencv-python>=5.0.0</code> and re-running tests is 90% of the migration.
+</p>
+</section>
+
+<section id="migrate">
+<h2>OpenCV 4 → 5 Migration Guide</h2>
+
+<h3>Step 1: Check Your OpenCV 4 Version</h3>
+<pre>python -c "import cv2; print(cv2.__version__)"
+# Should show 4.x.x — note your exact version for rollback</pre>
+
+<h3>Step 2: Install OpenCV 5</h3>
+<pre># pip (easiest — available from June 8, 2026)
+pip install opencv-python>=5.0.0
+
+# Or opencv-contrib-python if you need contrib modules
+pip install opencv-contrib-python>=5.0.0
+
+# Build from source (if you need custom flags)
+git clone -b 5.x https://github.com/opencv/opencv.git
+cd opencv && mkdir build && cd build
+cmake -DCMAKE_CXX_STANDARD=17 ..
+make -j$(nproc)
+sudo make install</pre>
+
+<h3>Step 3: API Changes That Will Break Your Code</h3>
+
+<table class="migration-table">
+<thead>
+<tr><th>#</th><th>What changed</th><th>Old (4.x)</th><th>New (5.x)</th><th>Priority</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>calib3d split</td>
+  <td><code>#include &lt;opencv2/calib3d.hpp&gt;</code></td>
+  <td>Legacy header still works; new: <code>&lt;opencv2/geometry.hpp&gt;</code></td>
+  <td><span class="priority-tag tag-p2">P2</span></td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>features2d renamed</td>
+  <td><code>#include &lt;opencv2/features2d.hpp&gt;</code></td>
+  <td><code>#include &lt;opencv2/features.hpp&gt;</code></td>
+  <td><span class="priority-tag tag-p2">P2</span></td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>Haar/HOG → contrib</td>
+  <td><code>cv2.CascadeClassifier()</code></td>
+  <td>Needs <code>opencv-contrib-python</code>; or use <code>cv2.FaceDetectorYN</code></td>
+  <td><span class="priority-tag tag-p1">P1</span></td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>ML module → contrib</td>
+  <td><code>cv2.ml.SVM_create()</code></td>
+  <td>Needs <code>opencv-contrib-python</code>, or use scikit-learn</td>
+  <td><span class="priority-tag tag-p1">P1</span></td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>1D array semantics</td>
+  <td><code>cv::Mat(v)</code> → N×1 (2D)</td>
+  <td>True 1D; use <code>m.total()</code> instead of <code>m.rows</code></td>
+  <td><span class="priority-tag tag-p1">P1</span></td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>C++17 required</td>
+  <td><code>-std=c++11</code></td>
+  <td><code>-std=c++17</code></td>
+  <td><span class="priority-tag tag-p1">P1</span></td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>C API removed</td>
+  <td><code>CvMat</code>, <code>IplImage</code></td>
+  <td>Must use C++ API</td>
+  <td><span class="priority-tag tag-p2">P2</span></td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>Darknet/Caffe gone</td>
+  <td><code>readNetFromDarknet()</code></td>
+  <td>Convert to ONNX first, then <code>readNetFromONNX()</code></td>
+  <td><span class="priority-tag tag-p1">P1</span></td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>New data types</td>
+  <td>CV_8U, CV_32F, etc.</td>
+  <td>New: CV_16BF, CV_32U, CV_64U, CV_64S, CV_Bool</td>
+  <td><span class="priority-tag tag-p2">P2</span></td>
+</tr>
+</tbody>
+</table>
+
+<h3>Step 4: Test Your Pipeline</h3>
+<pre>import cv2
+# Verify DNN model loading (auto-fallback to classic engine if needed)
+net = cv2.dnn.readNet("your_model.onnx")
+# Verify basic image I/O
+img = cv2.imread("test.jpg")
+print(f"Shape: {img.shape}, OpenCV: {cv2.__version__}")
+# Verify any custom C++ extensions still compile with -std=c++17</pre>
+
+<h3>Step 5: Rollback Plan</h3>
+<pre># pip rollback
+pip install opencv-python==4.10.0
+
+# conda snapshot
+conda list --export > conda-snapshot.txt
+# Restore: conda install --file conda-snapshot.txt
+
+# Docker pin (for CI)
+# Pin to: python:3.12-slim + pip install opencv-python==4.10.0</pre>
+</section>
+
+<section id="features">
+<h2>What's Actually New (And What's Hype)</h2>
+
+<h3 style="color:var(--ok);">Game-changer — upgrade for this</h3>
+<p><strong>New DNN Engine</strong> — 80%+ ONNX coverage, graph-based with attention fusion. If your OpenCV 4 project has models that fail to load or run slowly, this is the single biggest reason to upgrade. OpenCV's own benchmarks show 11–31% faster than ONNX Runtime on many models (YOLOv8n, XFeat, DINOv2). <strong style="color:var(--warn);">Note: these are self-reported benchmarks</strong> — no independent third-party verification yet. Performance varies by hardware (strong on AMD, competitive on Apple Silicon, slightly behind on Intel i9 for some models).</p>
+
+<h3>Solid improvements — nice to have</h3>
+<p><strong>LLM/VLM Inference</strong> — Run vision-language models end-to-end inside OpenCV. The VLM inference sample ships with the library. Who benefits: edge deployment engineers who want captioning/visual QA without adding PyTorch to their dependency chain.</p>
+<p><strong>Modern Python Bindings</strong> — Named arguments: <code>cv2.resize(img, dsize=(640,480), interpolation=cv2.INTER_LINEAR)</code>. No more guessing parameter order.</p>
+<p><strong>Accelerated Image Warping</strong> — <code>warpAffine</code>, <code>warpPerspective</code>, <code>remap</code> are 10–300% faster depending on platform. Nearest-neighbor resize now matches Pillow output exactly.</p>
+<p><strong>Better Docs</strong> — Responsive theme, Ctrl+K search, light/dark mode, cleaner math rendering. Browse at <a href="https://docs.opencv.org">docs.opencv.org</a>.</p>
+
+<h3>Niche / future potential — skip if you don't need it</h3>
+<p><strong>3D Vision Split</strong> — calib3d → geometry + calib + stereo + ptcloud. Multi-view camera calibration pipeline added. For robotics, AR/VR, photogrammetry teams.</p>
+<p><strong>New Data Types</strong> — bfloat16, uint32/64, int64, bool masks. For ML researchers doing mixed-precision work.</p>
+<p><strong>TRUCO Contour</strong> — Faster <code>findContours()</code>. Free perf improvement if you use contours.</p>
+
+<div class="limitations">
+  <h3>Current Limitations</h3>
+  <ol>
+    <li><strong>The new DNN engine is CPU-only.</strong> If you need CUDA, OpenVINO, or GPU inference, you stay on the classic engine (<code>ENGINE_CLASSIC</code>). GPU support is "coming in subsequent releases" — no timeline. This makes the headliner feature irrelevant for many production workloads.</li>
+    <li><strong>Performance claims are self-reported.</strong> The 2.3x YOLOv8 vs PyTorch claim is a headline number under undisclosed conditions. Detailed benchmark tables show a more nuanced picture: competitive with ONNX Runtime, sometimes faster, sometimes trailing. Treat as directional, not definitive.</li>
+    <li><strong>Contrib modules moved.</strong> If you use <code>cv2.ml</code>, Haar cascades, HOG, SURF, or G-API, you now need <code>opencv-contrib-python</code> or a custom build.</li>
+  </ol>
+</div>
+</section>
+
+<section id="use-cases">
+<h2>Who Should Upgrade</h2>
+
+<div class="use-case">
+  <h3>Edge Deployment Engineer</h3>
+  <p>You run CV models on Jetson, Raspberry Pi, or ARM. The new DNN engine's CPU-only limitation isn't a dealbreaker here — edge CPUs are often the primary compute. The reduced dependency chain (no PyTorch, no ONNX Runtime) means smaller container images and fewer build headaches. VLM support lets you add image captioning without Python ML stack bloat.</p>
+</div>
+
+<div class="use-case">
+  <h3>Python ML Engineer switching from PyTorch inference</h3>
+  <p>If you train in PyTorch but deploy inference separately, OpenCV 5's DNN engine can replace ONNX Runtime for many workloads. When it works: object detection (YOLO, YOLOX), image classification (ResNet, MobileNet), feature extraction (DINOv2). When it doesn't: models with unsupported ONNX ops (still ~20%), models that need GPU throughput, or transformer architectures with dynamic batching that ORT handles better.</p>
+</div>
+
+<div class="use-case">
+  <h3>Computer Vision Researcher</h3>
+  <p>The USAC robust estimation framework is now the default for all RANSAC-based algorithms — better results on noisy data. The multi-view calibration pipeline handles N cameras with partial observations. But for bleeding-edge research (new attention variants, custom ops), you still need PyTorch. OpenCV 5 is your deployment target, not your research sandbox.</p>
+</div>
+
+<div class="use-case">
+  <h3>OpenCV 4 Shop with a Big Codebase</h3>
+  <p>The pragmatic play: <code>pip install opencv-python>=5.0.0</code>, run your test suite, fix the handful of things that break (mostly contrib module imports and C++ header changes), and ship. The classic DNN engine fallback means your existing models keep working. Start migrating DNN code to the new engine gradually — flag models that benefit from better ONNX coverage. Don't port your GPU inference paths yet.</p>
+</div>
+</section>
+
+<section id="faq">
+<h2>FAQ</h2>
+
+<details>
+  <summary>Should I upgrade to OpenCV 5 right now?</summary>
+  <div class="faq-answer"><p>If you're a Python developer using <code>cv2</code> for classical CV + DNN inference on CPU — yes, upgrade this week. The API is backward-compatible, the new DNN engine is a genuine improvement, and the docs are better. If you rely on CUDA/GPU inference or use contrib modules (ML, Haar, SURF), test first — those paths changed.</p></div>
+</details>
+
+<details>
+  <summary>When will the new DNN engine support GPU/CUDA?</summary>
+  <div class="faq-answer"><p>The OpenCV team says "in subsequent releases" but has not committed to a specific version or date. The classic engine still supports CUDA and OpenVINO, so your GPU inference path is unchanged — just pin <code>ENGINE_CLASSIC</code>.</p></div>
+</details>
+
+<details>
+  <summary>The blog says "YOLOv8 2.3x faster than PyTorch" — is that real?</summary>
+  <div class="faq-answer"><p>This 2.3x number is OpenCV's own benchmark under undisclosed conditions. The detailed benchmark tables in the Wiki show the new DNN engine is competitive with ONNX Runtime (sometimes faster, sometimes slightly slower). The gap vs. PyTorch varies by model and hardware. Treat it as a rough indicator, not a guarantee. No independent third-party has verified these numbers yet.</p></div>
+</details>
+
+<details>
+  <summary>What happened to cv2.ml?</summary>
+  <div class="faq-answer"><p>The ML module (SVM, KNN, RTrees, etc.) moved to <code>opencv_contrib</code>. Install <code>opencv-contrib-python>=5.0.0</code> to keep using it, or switch to scikit-learn which is better maintained for ML algorithms anyway.</p></div>
+</details>
+
+<details>
+  <summary>My C++ code uses CascadeClassifier for face detection. What now?</summary>
+  <div class="faq-answer"><p>Haar cascade classifier moved to <code>opencv_contrib/xobjdetect</code>. Better alternative: use the DNN-based <code>cv2.FaceDetectorYN</code> (YuNet) which is in main OpenCV 5 — faster and more accurate.</p></div>
+</details>
+
+<details>
+  <summary>Why does cv::Mat(v).rows now return 1 instead of N?</summary>
+  <div class="faq-answer"><p>OpenCV 5 changed 1D array semantics — vectors wrapped into Mat are now true 1D arrays. Use <code>m.total()</code> instead of <code>m.rows</code> for element count, or explicitly reshape: <code>cv::Mat(v).reshape(1, (int)v.size())</code>.</p></div>
+</details>
+
+<details>
+  <summary>I have an old Caffe or Darknet model. Will it still load?</summary>
+  <div class="faq-answer"><p>No. <code>readNetFromCaffe()</code> and <code>readNetFromDarknet()</code> are removed. Convert to ONNX using ultralytics export (for YOLO) or caffe-onnx converter, then use <code>cv2.dnn.readNetFromONNX("model.onnx")</code>.</p></div>
+</details>
+</section>
+
+</main>
+
+<footer>
+  <p>Built from 15 sources · 8 pain signals · 9 API migration diffs mapped · OpenCV 5 released June 2026</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "OpenCV 5 Migration Guide: Should You Upgrade from OpenCV 4?",
+  "description": "OpenCV 5 ships a new DNN engine (80%+ ONNX) and native LLM/VLM inference, with classic fallback. What breaks, what's worth upgrading, and API migration diffs.",
+  "datePublished": "2026-06-10",
+  "dateModified": "2026-06-10",
+  "author": {"@type": "Organization", "name": "opencv5guide"}
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://opencv5guide.com/"},
+    {"@type": "ListItem", "position": 2, "name": "OpenCV 5 Migration Guide", "item": "https://opencv5guide.com/"}
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Should I upgrade to OpenCV 5 right now?", "acceptedAnswer": {"@type": "Answer", "text": "If you're a Python developer using cv2 for classical CV + DNN inference on CPU — yes, upgrade this week. The API is backward-compatible, the new DNN engine is a genuine improvement, and the docs are better. If you rely on CUDA/GPU inference or use contrib modules (ML, Haar, SURF), test first — those paths changed."}},
+    {"@type": "Question", "name": "When will the new DNN engine support GPU/CUDA?", "acceptedAnswer": {"@type": "Answer", "text": "The OpenCV team says 'in subsequent releases' but has not committed to a specific version or date. The classic engine still supports CUDA and OpenVINO, so your GPU inference path is unchanged — just pin ENGINE_CLASSIC."}},
+    {"@type": "Question", "name": "The blog says YOLOv8 2.3x faster than PyTorch — is that real?", "acceptedAnswer": {"@type": "Answer", "text": "This 2.3x number is OpenCV's own benchmark under undisclosed conditions. The detailed benchmark tables show the new DNN engine is competitive with ONNX Runtime. Treat it as a rough indicator, not a guarantee. No independent third-party has verified these numbers yet."}},
+    {"@type": "Question", "name": "What happened to cv2.ml?", "acceptedAnswer": {"@type": "Answer", "text": "The ML module (SVM, KNN, RTrees, etc.) moved to opencv_contrib. Install opencv-contrib-python>=5.0.0 to keep using it, or switch to scikit-learn which is better maintained for ML algorithms anyway."}},
+    {"@type": "Question", "name": "My C++ code uses CascadeClassifier for face detection. What now?", "acceptedAnswer": {"@type": "Answer", "text": "Haar cascade classifier moved to opencv_contrib/xobjdetect. Better alternative: use the DNN-based cv2.FaceDetectorYN (YuNet) which is in main OpenCV 5 — faster and more accurate."}},
+    {"@type": "Question", "name": "Why does cv::Mat(v).rows now return 1 instead of N?", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 changed 1D array semantics — vectors wrapped into Mat are now true 1D arrays. Use m.total() instead of m.rows for element count, or explicitly reshape: cv::Mat(v).reshape(1, (int)v.size())."}},
+    {"@type": "Question", "name": "I have an old Caffe or Darknet model. Will it still load?", "acceptedAnswer": {"@type": "Answer", "text": "No. readNetFromCaffe() and readNetFromDarknet() are removed. Convert to ONNX using ultralytics export (for YOLO) or caffe-onnx converter, then use cv2.dnn.readNetFromONNX()."}}
+  ]
+}
+</script>
+
+</body>
+</html>
