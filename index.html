@@ -388,6 +388,41 @@ conda list --export > conda-snapshot.txt
   <summary>I have an old Caffe or Darknet model. Will it still load?</summary>
   <div class="faq-answer"><p>No. <code>readNetFromCaffe()</code> and <code>readNetFromDarknet()</code> are removed. Convert to ONNX using ultralytics export (for YOLO) or caffe-onnx converter, then use <code>cv2.dnn.readNetFromONNX("model.onnx")</code>.</p></div>
 </details>
+
+<details>
+  <summary>Why do I get "module 'cv2' has no attribute 'ml'" / "SVM_create not found" after upgrading to OpenCV 5?</summary>
+  <div class="faq-answer"><p>The ML module (<code>cv2.ml.SVM_create()</code>, <code>cv2.ml.KNearest_create()</code>, <code>cv2.ml.RTrees_create()</code>) moved to opencv_contrib. Install <code>pip install opencv-contrib-python>=5.0.0</code> and the attribute error goes away. If you only use SVM/KNN for basic classification, scikit-learn is a lighter alternative without the contrib dependency.</p></div>
+</details>
+
+<details>
+  <summary>Why is CascadeClassifier not found in OpenCV 5?</summary>
+  <div class="faq-answer"><p><code>cv2.CascadeClassifier()</code> moved to <code>opencv_contrib/xobjdetect</code>. Either install <code>opencv-contrib-python>=5.0.0</code>, or switch to the DNN-based <code>cv2.FaceDetectorYN</code> (YuNet) which is bundled in main OpenCV 5 — faster and more accurate than Haar cascades for face detection.</p></div>
+</details>
+
+<details>
+  <summary>Why does readNetFromCaffe / readNetFromDarknet throw "not defined" in OpenCV 5?</summary>
+  <div class="faq-answer"><p>Both backend parsers were removed in v5. The error is <code>AttributeError: module 'cv2.dnn' has no attribute 'readNetFromCaffe'</code> (or <code>readNetFromDarknet</code>). Convert your model to ONNX format first — use ultralytics export for YOLO-based Darknet models, or caffe-onnx converter for Caffe models — then load with <code>cv2.dnn.readNetFromONNX("model.onnx")</code>.</p></div>
+</details>
+
+<details>
+  <summary>Why does cv::Mat.rows return 1 instead of N after upgrading to OpenCV 5?</summary>
+  <div class="faq-answer"><p>OpenCV 5 changed 1D array semantics — a <code>std::vector</code> wrapped into <code>cv::Mat</code> is now a true 1D array, so <code>.rows</code> returns 1 (a single row) instead of the element count. Fix: use <code>m.total()</code> everywhere you previously used <code>m.rows</code> to count elements, or explicitly reshape: <code>cv::Mat(v).reshape(1, (int)v.size())</code>.</p></div>
+</details>
+
+<details>
+  <summary>Why do I get "CvMat was not declared" / "IplImage was not declared" when compiling with OpenCV 5?</summary>
+  <div class="faq-answer"><p>The legacy C API (<code>CvMat</code>, <code>IplImage</code>, <code>CvMemStorage</code>) was fully removed in OpenCV 5. These types are not available even with <code>opencv_contrib</code>. Migrate to the C++ API: <code>CvMat</code> → <code>cv::Mat</code>, <code>IplImage</code> → <code>cv::Mat</code> (or <code>cv::UMat</code>), <code>CvMemStorage</code> → STL containers. If you have a large legacy C codebase, consider keeping OpenCV 4.10.</p></div>
+</details>
+
+<details>
+  <summary>Why is the new DNN engine not using my GPU in OpenCV 5?</summary>
+  <div class="faq-answer"><p>The new graph-based DNN engine is CPU-only as of v5.0. For CUDA, OpenVINO, or GPU inference, explicitly set <code>net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)</code> — this uses the classic engine fallback which still supports GPU. GPU support for the new engine is "coming in subsequent releases" with no committed date.</p></div>
+</details>
+
+<details>
+  <summary>Why do I get "opencv_contrib missing module" / "no module named cv2.ml" in OpenCV 5?</summary>
+  <div class="faq-answer"><p>Several modules moved from main OpenCV to opencv_contrib in v5: ML (<code>cv2.ml</code>), xobjdetect (Haar cascades, HOG), xfeatures2d (SURF, SIFT), and G-API. Install <code>pip install opencv-contrib-python>=5.0.0</code> to get them back. Check the migration table above for the full list of moved modules.</p></div>
+</details>
 </section>
 
 </main>
@@ -436,7 +471,14 @@ conda list --export > conda-snapshot.txt
     {"@type": "Question", "name": "What happened to cv2.ml?", "acceptedAnswer": {"@type": "Answer", "text": "The ML module (SVM, KNN, RTrees, etc.) moved to opencv_contrib. Install opencv-contrib-python>=5.0.0 to keep using it, or switch to scikit-learn which is better maintained for ML algorithms anyway."}},
     {"@type": "Question", "name": "My C++ code uses CascadeClassifier for face detection. What now?", "acceptedAnswer": {"@type": "Answer", "text": "Haar cascade classifier moved to opencv_contrib/xobjdetect. Better alternative: use the DNN-based cv2.FaceDetectorYN (YuNet) which is in main OpenCV 5 — faster and more accurate."}},
     {"@type": "Question", "name": "Why does cv::Mat(v).rows now return 1 instead of N?", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 changed 1D array semantics — vectors wrapped into Mat are now true 1D arrays. Use m.total() instead of m.rows for element count, or explicitly reshape: cv::Mat(v).reshape(1, (int)v.size())."}},
-    {"@type": "Question", "name": "I have an old Caffe or Darknet model. Will it still load?", "acceptedAnswer": {"@type": "Answer", "text": "No. readNetFromCaffe() and readNetFromDarknet() are removed. Convert to ONNX using ultralytics export (for YOLO) or caffe-onnx converter, then use cv2.dnn.readNetFromONNX()."}}
+    {"@type": "Question", "name": "I have an old Caffe or Darknet model. Will it still load?", "acceptedAnswer": {"@type": "Answer", "text": "No. readNetFromCaffe() and readNetFromDarknet() are removed. Convert to ONNX using ultralytics export (for YOLO) or caffe-onnx converter, then use cv2.dnn.readNetFromONNX()."}},
+    {"@type": "Question", "name": "Why do I get 'module cv2 has no attribute ml' / SVM_create not found after upgrading to OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "The ML module (cv2.ml.SVM_create(), cv2.ml.KNearest_create(), cv2.ml.RTrees_create()) moved to opencv_contrib. Install pip install opencv-contrib-python>=5.0.0 and the attribute error goes away. If you only use SVM/KNN for basic classification, scikit-learn is a lighter alternative without the contrib dependency."}},
+    {"@type": "Question", "name": "Why is CascadeClassifier not found in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "cv2.CascadeClassifier() moved to opencv_contrib/xobjdetect. Either install opencv-contrib-python>=5.0.0, or switch to the DNN-based cv2.FaceDetectorYN (YuNet) which is bundled in main OpenCV 5 — faster and more accurate than Haar cascades for face detection."}},
+    {"@type": "Question", "name": "Why does readNetFromCaffe / readNetFromDarknet throw not defined in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "Both backend parsers were removed in v5. The error is AttributeError: module cv2.dnn has no attribute readNetFromCaffe (or readNetFromDarknet). Convert your model to ONNX format first — use ultralytics export for YOLO-based Darknet models, or caffe-onnx converter for Caffe models — then load with cv2.dnn.readNetFromONNX()."}},
+    {"@type": "Question", "name": "Why does cv::Mat.rows return 1 instead of N after upgrading to OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 changed 1D array semantics — a std::vector wrapped into cv::Mat is now a true 1D array, so .rows returns 1 (a single row) instead of the element count. Fix: use m.total() everywhere you previously used m.rows to count elements, or explicitly reshape: cv::Mat(v).reshape(1, (int)v.size())."}},
+    {"@type": "Question", "name": "Why do I get CvMat was not declared / IplImage was not declared when compiling with OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "The legacy C API (CvMat, IplImage, CvMemStorage) was fully removed in OpenCV 5. These types are not available even with opencv_contrib. Migrate to the C++ API: CvMat to cv::Mat, IplImage to cv::Mat (or cv::UMat), CvMemStorage to STL containers. If you have a large legacy C codebase, consider keeping OpenCV 4.10."}},
+    {"@type": "Question", "name": "Why is the new DNN engine not using my GPU in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "The new graph-based DNN engine is CPU-only as of v5.0. For CUDA, OpenVINO, or GPU inference, explicitly set net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA) — this uses the classic engine fallback which still supports GPU. GPU support for the new engine is coming in subsequent releases with no committed date."}},
+    {"@type": "Question", "name": "Why do I get opencv_contrib missing module / no module named cv2.ml in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "Several modules moved from main OpenCV to opencv_contrib in v5: ML (cv2.ml), xobjdetect (Haar cascades, HOG), xfeatures2d (SURF, SIFT), and G-API. Install pip install opencv-contrib-python>=5.0.0 to get them back. Check the migration table above for the full list of moved modules."}}
   ]
 }
 </script>
