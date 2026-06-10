@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenCV 4 vs 5: What Changed in 2026 — Side-by-Side Comparison</title>
+<meta name="description" content="OpenCV 5 rewrites the DNN engine with 80%+ ONNX coverage, adds LLM/VLM inference, removes the C API. OpenCV 4 keeps the old engine. Side-by-side comparison with upgrade decision guide.">
+<meta property="og:title" content="OpenCV 4 vs 5: What Changed in 2026 — Side-by-Side Comparison">
+<meta property="og:description" content="OpenCV 5 rewrites the DNN engine with 80%+ ONNX coverage, adds LLM/VLM inference, removes the C API. Side-by-side comparison with upgrade decision guide.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://opencv5guide.com/vs-opencv-4/">
+<meta property="og:site_name" content="OpenCV 5 Guide">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenCV 4 vs 5: Side-by-Side Comparison">
+<meta name="twitter:description" content="OpenCV 5 rewrites the DNN engine with 80%+ ONNX coverage, adds LLM/VLM inference. Side-by-side comparison.">
+<link rel="canonical" href="https://opencv5guide.com/vs-opencv-4/">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+  --danger: #f85149; --warn: #d2991d; --ok: #3fb950;
+  --code-bg: #1c2128; --radius: 6px; --max-w: 820px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  padding: 0 1rem 3rem;
+}
+nav {
+  max-width: var(--max-w); margin: 0 auto; padding: 1.2rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+}
+nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav a:hover { color: var(--accent); }
+.logo { font-weight: 600; color: var(--text); font-size: 1rem; }
+.logo span { color: var(--ok); }
+main { max-width: var(--max-w); margin: 0 auto; }
+.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+h1 { font-size: 2rem; line-height: 1.3; margin-bottom: .6rem; }
+h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+p { margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.compare-table {
+  width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: .9rem;
+}
+.compare-table th {
+  background: var(--surface); text-align: left; padding: .65rem .8rem;
+  border: 1px solid var(--border); font-weight: 600;
+}
+.compare-table th:first-child { width: 28%; }
+.compare-table td {
+  padding: .55rem .8rem; border: 1px solid var(--border); vertical-align: top;
+  background: var(--surface);
+}
+.compare-table td:first-child { background: var(--bg); font-weight: 500; }
+.compare-table .v4 { color: var(--muted); }
+.compare-table .v5 { color: var(--text); }
+.compare-table code { font-size: .8rem; }
+.tag-yes { color: var(--ok); }
+.tag-no { color: var(--danger); }
+.tag-warn { color: var(--warn); }
+.tag-new { display: inline-block; background: rgba(63,185,80,.12); color: var(--ok); padding: .1rem .4rem; border-radius: 3px; font-size: .75rem; font-weight: 600; margin-left: .3rem; }
+.verdict {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem 1.4rem; margin: 1rem 0;
+}
+.verdict h3 { margin-top: 0; display: flex; align-items: center; gap: .5rem; }
+.decision {
+  background: var(--surface); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.3rem; margin: .8rem 0;
+}
+.decision h3 { margin-top: 0; }
+.decision code { font-size: .82rem; }
+.back-link {
+  display: inline-block; margin: 2rem 0 1rem;
+  padding: .5rem 1rem; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted); font-size: .9rem;
+}
+.back-link:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+footer {
+  max-width: var(--max-w); margin: 3rem auto 0; padding-top: 1.5rem;
+  border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem;
+}
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  .compare-table { font-size: .78rem; }
+  .compare-table td, .compare-table th { padding: .4rem .5rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">OpenCV<span>5</span>Guide</a>
+  <div>
+    <a href="/">Home</a> &nbsp;
+    <a href="/vs-opencv-4/">OpenCV 4 vs 5</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>OpenCV 4 vs 5: What Changed in 2026</h1>
+  <p style="font-size:1.1rem;color:var(--muted);max-width:640px;">
+    <strong style="color:var(--text);">OpenCV 5 isn't a feature update — it's a rearchitecture.</strong>
+    The DNN module gets a ground-up rewrite (22% → 80%+ ONNX coverage), LLM/VLM inference ships built-in, and the C API is finally gone. But GPU users should stay on OpenCV 4 for now — the new engine is CPU-only.
+  </p>
+</section>
+
+<section>
+<h2>Side-by-Side Comparison</h2>
+
+<table class="compare-table">
+<thead>
+<tr><th>Dimension</th><th>OpenCV 4</th><th>OpenCV 5</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>DNN Engine</td>
+  <td class="v4">Classic engine — <span class="tag-no">22% ONNX coverage</span>, no dynamic shapes, opaque errors</td>
+  <td class="v5">New graph-based engine — <span class="tag-yes">80%+ ONNX coverage</span>, shape inference, attention fusion <span class="tag-new">NEW</span></td>
+</tr>
+<tr>
+  <td>GPU / CUDA</td>
+  <td class="v4"><span class="tag-yes">Supported</span> — CUDA, OpenVINO, OpenCL backends</td>
+  <td class="v5">Classic engine still supports GPU <code>ENGINE_CLASSIC</code>; new engine <span class="tag-warn">CPU-only</span> (GPU "coming later")</td>
+</tr>
+<tr>
+  <td>LLM / VLM</td>
+  <td class="v4"><span class="tag-no">Not supported</span> — need PyTorch + ONNX Runtime + separate tokenizer</td>
+  <td class="v5"><span class="tag-yes">Native support</span> — VLM inference sample ships with the library <span class="tag-new">NEW</span></td>
+</tr>
+<tr>
+  <td>Python Bindings</td>
+  <td class="v4">Positional arguments — <code>cv2.resize(img, dsize, fx, fy, interpolation)</code></td>
+  <td class="v5"><span class="tag-yes">Named arguments</span> — <code>cv2.resize(img, dsize=(640,480), interpolation=cv2.INTER_LINEAR)</code> <span class="tag-new">NEW</span></td>
+</tr>
+<tr>
+  <td>C API</td>
+  <td class="v4"><span class="tag-yes">Available</span> — <code>CvMat</code>, <code>IplImage</code></td>
+  <td class="v5"><span class="tag-no">Removed</span> — must use C++ API; C++17 required</td>
+</tr>
+<tr>
+  <td>DNN Model Support</td>
+  <td class="v4">ONNX, Caffe, Darknet, TensorFlow, Torch</td>
+  <td class="v5"><span class="tag-warn">ONNX only</span> — Caffe, Darknet, TF, Torch parsers removed; convert to ONNX first</td>
+</tr>
+<tr>
+  <td>Module Structure</td>
+  <td class="v4">calib3d, features2d, objdetect, ml, gapi — all in main</td>
+  <td class="v5">calib3d → geometry+calib+stereo+ptcloud; features2d → features; Haar/HOG/ML/G-API → <code>opencv_contrib</code></td>
+</tr>
+<tr>
+  <td>Data Types</td>
+  <td class="v4">CV_8U, CV_8S, CV_16U, CV_16S, CV_32S, CV_32F, CV_64F</td>
+  <td class="v5">All of v4's types + CV_16BF (bfloat16), CV_32U, CV_64U, CV_64S, CV_Bool <span class="tag-new">NEW</span></td>
+</tr>
+<tr>
+  <td>RANSAC Default</td>
+  <td class="v4">Classic RANSAC</td>
+  <td class="v5"><span class="tag-yes">USAC</span> (Universal SAC) — better results on noisy data; default for all RANSAC-based algorithms</td>
+</tr>
+<tr>
+  <td>Image Warping</td>
+  <td class="v4">Standard performance</td>
+  <td class="v5"><span class="tag-yes">10–300% faster</span> — <code>warpAffine</code>, <code>warpPerspective</code>, <code>remap</code>; NN resize matches Pillow exactly</td>
+</tr>
+<tr>
+  <td>Documentation</td>
+  <td class="v4">Static, hard to navigate</td>
+  <td class="v5"><span class="tag-yes">Responsive theme</span>, Ctrl+K search, light/dark mode, cleaner math rendering</td>
+</tr>
+<tr>
+  <td>DNN Performance (vs ONNX Runtime)</td>
+  <td class="v4">Generally slower than ORT</td>
+  <td class="v5"><span class="tag-warn">Competitive</span> — 11–31% faster on some models, slightly behind on others. <strong>Self-reported benchmarks</strong> — no third-party verification yet.</td>
+</tr>
+<tr>
+  <td>C++ Standard</td>
+  <td class="v4">C++11 minimum</td>
+  <td class="v5"><span class="tag-warn">C++17 required</span> — affects custom build systems and embedded toolchains</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>DNN Engine: The Real Difference</h2>
+
+<div class="verdict">
+  <h3>OpenCV 4 DNN — Coin Flip <span style="font-weight:400;color:var(--muted);font-size:.9rem;">(frustrating)</span></h3>
+  <p style="color:var(--muted);">Export to ONNX, point <code>cv2.dnn.readNet()</code> at it, and hope. 78% of ONNX operators were unsupported. Dynamic shapes broke everything. Error messages were opaque. Developers on HN have been complaining about this for years — one commenter reported rewriting OpenCV inference code into hand-rolled kernels and getting 5x performance.</p>
+</div>
+
+<div class="verdict">
+  <h3>OpenCV 5 DNN — Graph Engine <span style="font-weight:400;color:var(--ok);font-size:.9rem;">(modernized)</span></h3>
+  <p style="color:var(--muted);">New graph-based engine with <strong>shape inference</strong>, <strong>operator fusion</strong>, and <strong>FlashAttention-style attention fusion</strong>. ONNX operator coverage jumps from 22% to 80%+. Dynamic shapes and variable batch sizes work correctly. The engine defaults to <code>ENGINE_AUTO</code> — tries new engine first, falls back to classic silently. But it's CPU-only, and the 2.3x YOLOv8 headline is self-reported with no independent verification.</p>
+</div>
+</section>
+
+<section>
+<h2>Migration Difficulty by Scenario</h2>
+
+<table class="compare-table">
+<thead>
+<tr><th>Scenario</th><th>4 → 5 Effort</th><th>Key Actions</th></tr>
+</thead>
+<tbody>
+<tr><td>Python, classical CV only</td><td><span class="tag-yes">Minimal</span> — 5 minutes</td><td><code>pip install opencv-python>=5.0.0</code>, re-run tests</td></tr>
+<tr><td>Python, DNN on CPU</td><td><span class="tag-yes">Low</span> — 15 minutes</td><td>Re-test models; old ONNX models auto-fallback to classic engine</td></tr>
+<tr><td>Python, DNN on GPU</td><td><span class="tag-warn">Skip for now</span> — wait</td><td>Pin <code>ENGINE_CLASSIC</code>; no benefit from upgrading yet</td></tr>
+<tr><td>C++, basic usage</td><td><span class="tag-warn">Medium</span> — 1 hour</td><td>Update includes, C++17 flag, test new data types in switch statements</td></tr>
+<tr><td>C++, with contrib modules</td><td><span class="tag-warn">Medium</span> — 2 hours</td><td>Rebuild with <code>opencv_contrib</code>; migrate Haar→FaceDetectorYN; ML→scikit-learn</td></tr>
+<tr><td>Legacy C code</td><td><span class="tag-no">High</span> — rewrite</td><td>C API fully removed; port to C++ or use Python bindings</td></tr>
+<tr><td>Darknet/Caffe models</td><td><span class="tag-warn">Medium</span> — convert</td><td>Convert to ONNX first; no more direct parsers in v5</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Decision Guide</h2>
+
+<div class="decision">
+  <h3>Stay on OpenCV 4 if...</h3>
+  <ul>
+    <li>You rely on <strong>GPU inference</strong> (CUDA/OpenVINO) — the new DNN engine is CPU-only with no timeline</li>
+    <li>Your production pipeline uses <strong>Darknet or Caffe models</strong> directly — parsers are gone in v5</li>
+    <li>You have <strong>legacy C code</strong> — the C API was fully removed; porting is a real project</li>
+    <li>You're in the <strong>middle of a critical release</strong> — don't change CV libraries mid-sprint</li>
+  </ul>
+</div>
+
+<div class="decision">
+  <h3>Upgrade to OpenCV 5 now if...</h3>
+  <ul>
+    <li>You do <strong>DNN inference on CPU</strong> — the new engine is a genuine improvement, old models auto-fallback</li>
+    <li>You want <strong>LLM/VLM inference without PyTorch</strong> — native support eliminates dependency bloat</li>
+    <li>You value <strong>modern Python ergonomics</strong> — named arguments, better docs, cleaner API</li>
+    <li>You're starting a <strong>new project</strong> — no reason to start on v4 in mid-2026</li>
+  </ul>
+</div>
+
+<div class="decision">
+  <h3>Upgrade later (but prepare now) if...</h3>
+  <ul>
+    <li>You use <strong>contrib modules</strong> (cv2.ml, Haar, SURF, G-API) — test the migration path first</li>
+    <li>Your C++ code has <strong>type switches on Mat depth</strong> — new data types need new cases</li>
+    <li>You publish <strong>native addons</strong> — C++17 requirement may break older toolchains</li>
+  </ul>
+</div>
+</section>
+
+<section>
+<h2>FAQ</h2>
+
+<details>
+  <summary>Is OpenCV 5 faster than OpenCV 4?</summary>
+  <div class="faq-answer"><p><strong>It depends on what you measure.</strong> The new DNN engine is 11–31% faster than ONNX Runtime on some models (YOLOv8n, XFeat, DINOv2) but slightly behind on others. Image warping (<code>warpAffine</code>, <code>warpPerspective</code>, <code>remap</code>) is 10–300% faster. Contour finding (<code>findContours</code>) is faster via the new TRUCO algorithm. But these are all <strong>self-reported benchmarks</strong> — no independent third-party verification yet. Classical CV operations (imread, cvtColor, threshold) should perform identically.</p></div>
+</details>
+
+<details>
+  <summary>Will OpenCV 5 support GPU/CUDA for the new DNN engine?</summary>
+  <div class="faq-answer"><p>Yes, "in subsequent releases" — but the OpenCV team has not committed to a specific version or date. The classic engine still supports CUDA and OpenVINO in v5, so GPU inference is unchanged. The new engine's CPU-only status is the biggest reason many production users are waiting.</p></div>
+</details>
+
+<details>
+  <summary>Can I install OpenCV 5 and OpenCV 4 side by side?</summary>
+  <div class="faq-answer"><p>In Python: not easily via pip. <code>pip install opencv-python==4.10.0</code> and <code>pip install opencv-python>=5.0.0</code> will conflict. Use separate conda environments or Docker containers. In C++: use different install prefixes (<code>-DCMAKE_INSTALL_PREFIX=/usr/local/opencv4</code> and <code>/usr/local/opencv5</code>) and set <code>CMAKE_PREFIX_PATH</code> accordingly.</p></div>
+</details>
+
+<details>
+  <summary>What about opencv-contrib-python? Does it work with v5?</summary>
+  <div class="faq-answer"><p>Yes — <code>pip install opencv-contrib-python>=5.0.0</code>. But some modules that were in main v4 moved to contrib in v5 (cv2.ml, Haar cascades, HOG, SURF, G-API). If you were installing <code>opencv-python</code> before and using these, you'll need to switch to <code>opencv-contrib-python</code>.</p></div>
+</details>
+
+<details>
+  <summary>How long should I wait before upgrading?</summary>
+  <div class="faq-answer"><p>For CPU-based Python developers: <strong>now</strong>. The API is backward-compatible and the DNN engine is a genuine upgrade. For GPU users: wait for GPU support in the new engine (no timeline). For large C++ codebases: budget 1–2 hours for the migration, then upgrade. For legacy C code users: start planning the C++ port now; the C API isn't coming back.</p></div>
+</details>
+</section>
+
+<a href="/" class="back-link">← Back to OpenCV 5 Migration Guide</a>
+
+</main>
+
+<footer>
+  <p><a href="/">opencv5guide.com</a> — 86k GitHub stars, 1M daily installs. Full migration guide with 9 API diffs ranked P0→P2.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "OpenCV 4 vs 5: What Changed in 2026 — Side-by-Side Comparison",
+  "description": "OpenCV 5 rewrites the DNN engine with 80%+ ONNX coverage, adds LLM/VLM inference, removes the C API. Side-by-side comparison with upgrade decision guide.",
+  "datePublished": "2026-06-10",
+  "dateModified": "2026-06-10",
+  "author": {"@type": "Organization", "name": "opencv5guide"}
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://opencv5guide.com/"},
+    {"@type": "ListItem", "position": 2, "name": "OpenCV 4 vs 5 Comparison", "item": "https://opencv5guide.com/vs-opencv-4/"}
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Is OpenCV 5 faster than OpenCV 4?", "acceptedAnswer": {"@type": "Answer", "text": "It depends on what you measure. The new DNN engine is 11–31% faster than ONNX Runtime on some models (YOLOv8n, XFeat, DINOv2) but slightly behind on others. Image warping is 10–300% faster. But these are all self-reported benchmarks — no independent third-party verification yet."}},
+    {"@type": "Question", "name": "Will OpenCV 5 support GPU/CUDA for the new DNN engine?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, 'in subsequent releases' — but no specific version or date committed. The classic engine still supports CUDA and OpenVINO in v5, so GPU inference is unchanged."}},
+    {"@type": "Question", "name": "Can I install OpenCV 5 and OpenCV 4 side by side?", "acceptedAnswer": {"@type": "Answer", "text": "In Python: use separate conda environments or Docker containers. In C++: use different install prefixes and set CMAKE_PREFIX_PATH accordingly."}},
+    {"@type": "Question", "name": "What about opencv-contrib-python? Does it work with v5?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — pip install opencv-contrib-python>=5.0.0. But some modules that were in main v4 moved to contrib in v5 (cv2.ml, Haar cascades, HOG, SURF, G-API)."}},
+    {"@type": "Question", "name": "How long should I wait before upgrading?", "acceptedAnswer": {"@type": "Answer", "text": "For CPU-based Python developers: now. The API is backward-compatible. For GPU users: wait for GPU support. For large C++ codebases: budget 1–2 hours. For legacy C code users: start planning the C++ port now."}}
+  ]
+}
+</script>
+
+</body>
+</html>
