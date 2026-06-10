@@ -423,6 +423,26 @@ conda list --export > conda-snapshot.txt
   <summary>Why do I get "opencv_contrib missing module" / "no module named cv2.ml" in OpenCV 5?</summary>
   <div class="faq-answer"><p>Several modules moved from main OpenCV to opencv_contrib in v5: ML (<code>cv2.ml</code>), xobjdetect (Haar cascades, HOG), xfeatures2d (SURF, SIFT), and G-API. Install <code>pip install opencv-contrib-python>=5.0.0</code> to get them back. Check the migration table above for the full list of moved modules.</p></div>
 </details>
+
+<details>
+  <summary>My ONNX model loads without errors in OpenCV 5 but produces wrong/garbage output. What's happening?</summary>
+  <div class="faq-answer"><p>This is the silent-killer scenario. <code>ENGINE_AUTO</code> (default) picks the new graph engine for your model, the model compiles without error, but the new engine handles certain ops differently — dynamic shapes, channel ordering, or normalization parameters may differ subtly from the classic engine. No error, just wrong results. Fix: force the classic engine for that model via <code>net.setPreferableBackend(cv2.dnn.DNN_BACKEND_INFERENCE_ENGINE)</code> and compare outputs side-by-side with v4 before trusting v5 inference in production.</p></div>
+</details>
+
+<details>
+  <summary>After installing OpenCV 5, import cv2 fails with DLL load error / "ImportError: DLL load failed" on Windows</summary>
+  <div class="faq-answer"><p>You likely had <code>opencv-python-headless</code> installed (common in server/Docker) and installed <code>opencv-python>=5.0.0</code> on top, or vice versa. The two packages ship different DLL sets and conflict at the C++ level. Fix: <code>pip uninstall opencv-python opencv-python-headless opencv-contrib-python -y && pip install opencv-python>=5.0.0</code>. Pick exactly one flavor — never mix <code>-headless</code> with the GUI version on the same environment.</p></div>
+</details>
+
+<details>
+  <summary>ImportError: /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version 'GLIBCXX_3.4.29' not found when importing cv2 on Linux</summary>
+  <div class="faq-answer"><p>OpenCV 5 wheels are compiled with C++17 and link against a newer libstdc++ than what ships on older LTS distros (Ubuntu 20.04, CentOS 7, Debian 10). The pip wheel expects <code>libstdc++.so.6</code> with <code>GLIBCXX_3.4.29</code>. Fix: <code>sudo apt install gcc-12 g++-12</code> (Ubuntu 20.04), or <code>conda install -c conda-forge libstdcxx-ng</code> which bundles a compatible runtime. Docker users: switch base image to <code>ubuntu:22.04</code> or newer.</p></div>
+</details>
+
+<details>
+  <summary>cv2.setNumThreads() has no effect on the new DNN engine — all CPU cores are maxed out</summary>
+  <div class="faq-answer"><p>The new graph-based DNN engine manages its own thread pool internally and may not respect <code>cv2.setNumThreads()</code>. This causes CPU oversubscription when running multiple models or mixing OpenCV with other thread-pooled libraries (numpy, PyTorch). Workaround: configure thread count via the engine's own config, or fall back to <code>ENGINE_CLASSIC</code> which respects <code>setNumThreads()</code>. This is a known gap in the v5.0 release — follow OpenCV issue tracker for updates.</p></div>
+</details>
 </section>
 
 </main>
@@ -478,7 +498,11 @@ conda list --export > conda-snapshot.txt
     {"@type": "Question", "name": "Why does cv::Mat.rows return 1 instead of N after upgrading to OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 changed 1D array semantics — a std::vector wrapped into cv::Mat is now a true 1D array, so .rows returns 1 (a single row) instead of the element count. Fix: use m.total() everywhere you previously used m.rows to count elements, or explicitly reshape: cv::Mat(v).reshape(1, (int)v.size())."}},
     {"@type": "Question", "name": "Why do I get CvMat was not declared / IplImage was not declared when compiling with OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "The legacy C API (CvMat, IplImage, CvMemStorage) was fully removed in OpenCV 5. These types are not available even with opencv_contrib. Migrate to the C++ API: CvMat to cv::Mat, IplImage to cv::Mat (or cv::UMat), CvMemStorage to STL containers. If you have a large legacy C codebase, consider keeping OpenCV 4.10."}},
     {"@type": "Question", "name": "Why is the new DNN engine not using my GPU in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "The new graph-based DNN engine is CPU-only as of v5.0. For CUDA, OpenVINO, or GPU inference, explicitly set net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA) — this uses the classic engine fallback which still supports GPU. GPU support for the new engine is coming in subsequent releases with no committed date."}},
-    {"@type": "Question", "name": "Why do I get opencv_contrib missing module / no module named cv2.ml in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "Several modules moved from main OpenCV to opencv_contrib in v5: ML (cv2.ml), xobjdetect (Haar cascades, HOG), xfeatures2d (SURF, SIFT), and G-API. Install pip install opencv-contrib-python>=5.0.0 to get them back. Check the migration table above for the full list of moved modules."}}
+    {"@type": "Question", "name": "Why do I get opencv_contrib missing module / no module named cv2.ml in OpenCV 5?", "acceptedAnswer": {"@type": "Answer", "text": "Several modules moved from main OpenCV to opencv_contrib in v5: ML (cv2.ml), xobjdetect (Haar cascades, HOG), xfeatures2d (SURF, SIFT), and G-API. Install pip install opencv-contrib-python>=5.0.0 to get them back. Check the migration table above for the full list of moved modules."}},
+    {"@type": "Question", "name": "My ONNX model loads without errors in OpenCV 5 but produces wrong/garbage output. What is happening?", "acceptedAnswer": {"@type": "Answer", "text": "ENGINE_AUTO picks the new graph engine which handles certain ops differently — dynamic shapes, channel ordering, or normalization parameters may differ subtly from the classic engine. Force the classic engine for that model and compare outputs side-by-side with v4 before trusting v5 inference in production."}},
+    {"@type": "Question", "name": "After installing OpenCV 5, import cv2 fails with DLL load error / ImportError DLL load failed on Windows", "acceptedAnswer": {"@type": "Answer", "text": "You likely had opencv-python-headless installed and installed opencv-python on top, or vice versa. The two packages ship different DLL sets and conflict. Fix: pip uninstall all opencv packages then install exactly one flavor. Never mix -headless with the GUI version on the same environment."}},
+    {"@type": "Question", "name": "ImportError: libstdc++.so.6 version GLIBCXX_3.4.29 not found when importing cv2 on Linux", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 wheels are compiled with C++17 and need newer libstdc++ than what ships on older LTS distros (Ubuntu 20.04, CentOS 7). Install gcc-12/g++-12, use conda libstdcxx-ng, or switch Docker base to ubuntu:22.04+."}},
+    {"@type": "Question", "name": "cv2.setNumThreads() has no effect on the new DNN engine — all CPU cores are maxed out", "acceptedAnswer": {"@type": "Answer", "text": "The new graph-based DNN engine manages its own thread pool and may not respect cv2.setNumThreads(). This causes CPU oversubscription. Configure thread count via the engine's own config or fall back to ENGINE_CLASSIC. This is a known gap in v5.0."}}
   ]
 }
 </script>
