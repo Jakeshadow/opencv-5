@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How to Install OpenCV 5 — pip, Docker, Source, Platform Guide</title>
+<meta name="description" content="Install OpenCV 5 on Windows, Mac, Linux, Jetson — pip, Docker, source build with CMake. Quick start plus platform-specific fixes for DLL errors, GLIBCXX, conda.">
+<meta property="og:title" content="How to Install OpenCV 5 — pip, Docker, Source, Platform Guide">
+<meta property="og:description" content="Install OpenCV 5 on Windows, Mac, Linux, Jetson — pip, Docker, source build. Platform-specific fixes included.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://opencv5guide.com/install/">
+<meta property="og:site_name" content="OpenCV 5 Guide">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How to Install OpenCV 5 — Complete Install Guide">
+<meta name="twitter:description" content="pip, Docker, source build, conda. Platform-specific fixes for Windows, Mac, Linux, Jetson.">
+<link rel="canonical" href="https://opencv5guide.com/install/">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+  --danger: #f85149; --warn: #d2991d; --ok: #3fb950;
+  --code-bg: #1c2128; --radius: 6px; --max-w: 820px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  padding: 0 1rem 3rem;
+}
+nav {
+  max-width: var(--max-w); margin: 0 auto; padding: 1.2rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+}
+nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav a:hover { color: var(--accent); }
+.logo { font-weight: 600; color: var(--text); font-size: 1rem; }
+.logo span { color: var(--ok); }
+main { max-width: var(--max-w); margin: 0 auto; }
+.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+h1 { font-size: 2rem; line-height: 1.3; margin-bottom: .6rem; }
+h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+p { margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.2rem; overflow-x: auto;
+  font-size: .88rem; line-height: 1.55; margin: .8rem 0 1.2rem;
+}
+code { font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: .88rem; }
+:not(pre) > code {
+  background: var(--code-bg); padding: .12rem .35rem; border-radius: 3px;
+  font-size: .85rem; border: 1px solid var(--border);
+}
+.platform-table {
+  width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem;
+  font-size: .88rem;
+}
+.platform-table th {
+  background: var(--surface); text-align: left; padding: .6rem .7rem;
+  border: 1px solid var(--border); font-weight: 600;
+}
+.platform-table td {
+  padding: .55rem .7rem; border: 1px solid var(--border);
+  vertical-align: top;
+}
+.platform-table code { font-size: .82rem; }
+.fix-box {
+  background: var(--surface); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.3rem; margin: .8rem 0;
+}
+.fix-box h3 { margin-top: 0; }
+.related-links {
+  max-width: var(--max-w); margin: 3rem auto 0; text-align: center;
+  padding-top: 2rem; border-top: 1px solid var(--border);
+}
+.related-links a {
+  display: inline-block; padding: .5rem 1rem; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted); font-size: .9rem; margin: .3rem;
+}
+.related-links a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+footer {
+  max-width: var(--max-w); margin: 2rem auto 0; padding-top: 1.5rem;
+  border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem;
+}
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  pre { font-size: .8rem; padding: .8rem; }
+  .platform-table { font-size: .78rem; }
+  .platform-table td, .platform-table th { padding: .4rem .5rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">OpenCV<span>5</span>Guide</a>
+  <div>
+    <a href="/">Home</a> &nbsp;
+    <a href="/install/">Install</a> &nbsp;
+    <a href="/dnn/">DNN Guide</a> &nbsp;
+    <a href="/migration/">Migration</a> &nbsp;
+    <a href="/vs-opencv-4/">OpenCV 4 vs 5</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>How to Install OpenCV 5</h1>
+  <p style="font-size:1.1rem;color:var(--muted);max-width:640px;">
+    OpenCV 5 released June 2026. <strong style="color:var(--ok);">pip install opencv-python>=5.0.0</strong> is all you need for Python. C++ requires C++17 and CMake 3.20+. Full guide for every platform.
+  </p>
+</section>
+
+<section>
+<h2>Quick Start (pip)</h2>
+<pre>pip install opencv-python>=5.0.0
+
+# Verify
+python -c "import cv2; print(cv2.__version__)"
+# Expected: 5.0.0
+
+# If you need contrib modules (cv2.ml, Haar, SURF, G-API)
+pip install opencv-contrib-python>=5.0.0</pre>
+</section>
+
+<section>
+<h2>Platform-Specific Guides</h2>
+
+<table class="platform-table">
+<thead>
+<tr><th>Platform</th><th>Method</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>Windows</strong></td>
+  <td><code>pip install opencv-python>=5.0.0</code></td>
+  <td>If you had <code>opencv-python-headless</code> before, uninstall all opencv packages first — mixing flavors causes DLL conflicts. See fix below.</td>
+</tr>
+<tr>
+  <td><strong>macOS</strong></td>
+  <td><code>pip install opencv-python>=5.0.0</code></td>
+  <td>Works on both Intel and Apple Silicon. For M1/M2/M3, the wheel includes universal2 binaries.</td>
+</tr>
+<tr>
+  <td><strong>Linux (Ubuntu 22.04+)</strong></td>
+  <td><code>pip install opencv-python>=5.0.0</code></td>
+  <td>Ubuntu 20.04 / CentOS 7 / Debian 10 users: pip wheel needs GLIBCXX_3.4.29 — see GLIBCXX fix below.</td>
+</tr>
+<tr>
+  <td><strong>Jetson / ARM</strong></td>
+  <td>Source build</td>
+  <td>No pre-built pip wheel for ARM64 yet. Build from source with C++17 toolchain.</td>
+</tr>
+<tr>
+  <td><strong>Docker</strong></td>
+  <td><code>FROM python:3.12-slim</code></td>
+  <td>Use ubuntu:22.04+ as base image. Dockerfile example below.</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Source Build (CMake)</h2>
+<pre># Clone
+git clone -b 5.x https://github.com/opencv/opencv.git
+cd opencv && mkdir build && cd build
+
+# Configure — must use C++17
+cmake -DCMAKE_CXX_STANDARD=17 \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_EXAMPLES=ON \
+      ..
+
+# Build (adjust -j to your core count)
+make -j$(nproc)
+
+# Install
+sudo make install
+
+# Verify
+pkg-config --modversion opencv5
+# Expected: 5.0.0</pre>
+
+<p>Key CMake flags:</p>
+<ul style="margin:0 0 1rem 1.5rem;color:var(--muted);">
+  <li><code>-DBUILD_opencv_contrib=ON</code> — include contrib modules</li>
+  <li><code>-DWITH_CUDA=ON</code> — CUDA support (classic engine only in v5)</li>
+  <li><code>-DCMAKE_INSTALL_PREFIX=/usr/local/opencv5</code> — install side-by-side with v4</li>
+</ul>
+</section>
+
+<section>
+<h2>Docker Setup</h2>
+<pre># Dockerfile
+FROM python:3.12-slim
+
+RUN pip install opencv-python>=5.0.0
+
+# Verify
+RUN python -c "import cv2; print(cv2.__version__)"
+
+# Your app
+COPY app.py .
+CMD ["python", "app.py"]</pre>
+<p style="color:var(--muted);">For GPU Docker images, use <code>nvidia/cuda:12.4-runtime-ubuntu22.04</code> as base instead. Remember the new DNN engine is CPU-only — pin <code>ENGINE_CLASSIC</code> for GPU.</p>
+</section>
+
+<section>
+<h2>conda Install</h2>
+<pre># conda-forge (may lag behind pip by a few days)
+conda install -c conda-forge opencv=5.0.0
+
+# If not available yet, use pip inside conda env
+conda create -n cv5 python=3.12
+conda activate cv5
+pip install opencv-python>=5.0.0</pre>
+</section>
+
+<section>
+<h2>Common Install Errors &amp; Fixes</h2>
+
+<div class="fix-box">
+  <h3>Windows: "ImportError: DLL load failed"</h3>
+  <p style="color:var(--muted);">You had <code>opencv-python-headless</code> installed and installed <code>opencv-python</code> on top (or vice versa). The two packages ship different DLL sets.</p>
+  <pre>pip uninstall opencv-python opencv-python-headless opencv-contrib-python -y
+pip install opencv-python>=5.0.0
+# Pick exactly ONE flavor — never mix headless with GUI version</pre>
+</div>
+
+<div class="fix-box">
+  <h3>Linux: "GLIBCXX_3.4.29 not found"</h3>
+  <p style="color:var(--muted);">OpenCV 5 wheels are compiled with C++17 and need a newer libstdc++ than what ships on Ubuntu 20.04 / CentOS 7 / Debian 10.</p>
+  <pre># Ubuntu 20.04
+sudo apt install gcc-12 g++-12
+
+# conda (bundles compatible libstdc++)
+conda install -c conda-forge libstdcxx-ng
+
+# Docker — switch base image
+# Bad:  FROM python:3.12-slim (based on Debian 10)
+# Good: FROM ubuntu:22.04 + install python3</pre>
+</div>
+
+<div class="fix-box">
+  <h3>macOS: "Library not loaded: @rpath/libopencv..."</h3>
+  <p style="color:var(--muted);">Typically a Homebrew conflict. The system finds Homebrew's OpenCV 4 dylib before the pip-installed v5.</p>
+  <pre># Uninstall Homebrew's OpenCV if present
+brew uninstall opencv
+
+# Then reinstall from pip
+pip install --force-reinstall opencv-python>=5.0.0</pre>
+</div>
+
+<div class="fix-box">
+  <h3>ModuleNotFoundError: No module named 'cv2.ml'</h3>
+  <p style="color:var(--muted);"><code>cv2.ml</code> moved to opencv_contrib in v5. Install <code>opencv-contrib-python</code> instead of <code>opencv-python</code>, or switch to scikit-learn.</p>
+  <pre>pip uninstall opencv-python -y
+pip install opencv-contrib-python>=5.0.0</pre>
+</div>
+</section>
+
+</main>
+
+<div class="related-links">
+  <p style="color:var(--muted);margin-bottom:1rem;">Next steps after installing:</p>
+  <a href="/dnn/">OpenCV 5 DNN Guide — Run YOLO, ResNet, ViT</a>
+  <a href="/migration/">OpenCV 4 → 5 Migration Checklist</a>
+</div>
+
+<footer>
+  <p><a href="/">opencv5guide.com</a> — OpenCV 5 released June 2026. 86k GitHub stars, 1M daily installs.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Install OpenCV 5 — pip, Docker, Source, Platform Guide",
+  "description": "Install OpenCV 5 on Windows, Mac, Linux, Jetson with pip, Docker, source build, or conda. Includes fixes for common install errors.",
+  "url": "https://opencv5guide.com/install/",
+  "datePublished": "2026-06-11",
+  "dateModified": "2026-06-11",
+  "author": {"@type": "Organization", "name": "opencv5guide", "url": "https://opencv5guide.com"}
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://opencv5guide.com/"},
+    {"@type": "ListItem", "position": 2, "name": "Install OpenCV 5", "item": "https://opencv5guide.com/install/"}
+  ]
+}
+</script>
+
+</body>
+</html>
