@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenCV 5 DNN Tutorial — Run YOLOv8, ResNet, ViT with New Engine</title>
+<meta name="description" content="OpenCV 5 DNN hands-on — run YOLOv8 object detection, ResNet classification, ViT inference with the new graph-based engine. Complete code, benchmark comparison, fallback guide.">
+<meta property="og:title" content="OpenCV 5 DNN Tutorial — Run YOLOv8, ResNet, ViT">
+<meta property="og:description" content="Hands-on OpenCV 5 DNN guide — YOLOv8, ResNet, ViT with the new engine. Complete code, benchmarks.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://opencv5guide.com/dnn/">
+<meta property="og:site_name" content="OpenCV 5 Guide">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenCV 5 DNN Tutorial — YOLOv8, ResNet, ViT">
+<meta name="twitter:description" content="Hands-on DNN guide with the new graph engine. Complete code, benchmarks, fallback strategy.">
+<link rel="canonical" href="https://opencv5guide.com/dnn/">
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+  --danger: #f85149; --warn: #d2991d; --ok: #3fb950;
+  --code-bg: #1c2128; --radius: 6px; --max-w: 820px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  padding: 0 1rem 3rem;
+}
+nav {
+  max-width: var(--max-w); margin: 0 auto; padding: 1.2rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+}
+nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav a:hover { color: var(--accent); }
+.logo { font-weight: 600; color: var(--text); font-size: 1rem; }
+.logo span { color: var(--ok); }
+main { max-width: var(--max-w); margin: 0 auto; }
+.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+h1 { font-size: 2rem; line-height: 1.3; margin-bottom: .6rem; }
+h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+p { margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.2rem; overflow-x: auto;
+  font-size: .88rem; line-height: 1.55; margin: .8rem 0 1.2rem;
+}
+code { font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: .88rem; }
+:not(pre) > code {
+  background: var(--code-bg); padding: .12rem .35rem; border-radius: 3px;
+  font-size: .85rem; border: 1px solid var(--border);
+}
+.bench-table {
+  width: 100%; border-collapse: collapse; margin: .8rem 0 1.2rem;
+  font-size: .88rem;
+}
+.bench-table th {
+  background: var(--surface); text-align: left; padding: .6rem .7rem;
+  border: 1px solid var(--border); font-weight: 600;
+}
+.bench-table td {
+  padding: .55rem .7rem; border: 1px solid var(--border);
+  vertical-align: top;
+}
+.bench-table code { font-size: .82rem; }
+.note-box {
+  background: var(--surface); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.3rem; margin: .8rem 0;
+}
+.note-box h3 { margin-top: 0; }
+.warn-box {
+  background: rgba(248,81,73,.06); border: 1px solid rgba(248,81,73,.18);
+  border-radius: var(--radius); padding: 1.2rem 1.4rem; margin: 1.2rem 0;
+}
+.warn-box h3 { color: var(--warn); margin-top: 0; }
+.related-links {
+  max-width: var(--max-w); margin: 3rem auto 0; text-align: center;
+  padding-top: 2rem; border-top: 1px solid var(--border);
+}
+.related-links a {
+  display: inline-block; padding: .5rem 1rem; border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted); font-size: .9rem; margin: .3rem;
+}
+.related-links a:hover { border-color: var(--accent); color: var(--accent); text-decoration: none; }
+footer {
+  max-width: var(--max-w); margin: 2rem auto 0; padding-top: 1.5rem;
+  border-top: 1px solid var(--border); color: var(--muted); font-size: .85rem;
+}
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  pre { font-size: .8rem; padding: .8rem; }
+  .bench-table { font-size: .78rem; }
+  .bench-table td, .bench-table th { padding: .4rem .5rem; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="logo">OpenCV<span>5</span>Guide</a>
+  <div>
+    <a href="/">Home</a> &nbsp;
+    <a href="/install/">Install</a> &nbsp;
+    <a href="/dnn/">DNN Guide</a> &nbsp;
+    <a href="/migration/">Migration</a> &nbsp;
+    <a href="/vs-opencv-4/">OpenCV 4 vs 5</a>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+  <h1>OpenCV 5 DNN: Hands-On with the New Engine</h1>
+  <p style="font-size:1.1rem;color:var(--muted);max-width:640px;">
+    The v5 DNN module gets a ground-up rewrite — <strong style="color:var(--ok);">80%+ ONNX operator coverage</strong>,
+    graph-based engine with attention fusion, native LLM/VLM inference.
+    Three complete examples with copy-paste-ready code.
+  </p>
+</section>
+
+<section>
+<h2>What Changed in the DNN Module</h2>
+
+<div class="note-box">
+  <h3>The Short Version</h3>
+  <p style="color:var(--muted);">
+    <code>cv2.dnn.readNet("model.onnx")</code> still works.
+    But underneath is a completely new graph-based engine that handles dynamic shapes,
+    fuses attention patterns, and runs models that used to fail with "unsupported operator."
+    It's <strong>CPU-only</strong> for now — GPU users stay on <code>ENGINE_CLASSIC</code>.
+  </p>
+</div>
+
+<table class="bench-table">
+<thead>
+<tr><th></th><th>OpenCV 4 DNN</th><th>OpenCV 5 DNN</th></tr>
+</thead>
+<tbody>
+<tr><td>ONNX Coverage</td><td>~22%</td><td style="color:var(--ok);">80%+</td></tr>
+<tr><td>Dynamic Shapes</td><td style="color:var(--danger);">Broken</td><td style="color:var(--ok);">Supported</td></tr>
+<tr><td>Attention Fusion</td><td style="color:var(--danger);">None</td><td style="color:var(--ok);">FlashAttention-style</td></tr>
+<tr><td>GPU Support</td><td style="color:var(--ok);">CUDA, OpenVINO</td><td style="color:var(--warn);">CPU only (classic engine for GPU)</td></tr>
+<tr><td>LLM/VLM</td><td style="color:var(--danger);">No</td><td style="color:var(--ok);">Native support</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Example 1: YOLOv8 Object Detection</h2>
+
+<pre>import cv2
+import numpy as np
+
+# Load model — ENGINE_AUTO picks new engine, falls back to classic
+net = cv2.dnn.readNet("yolov8n.onnx")
+
+# Read and preprocess
+img = cv2.imread("street.jpg")
+blob = cv2.dnn.blobFromImage(img, 1/255.0, (640, 640), swapRB=True)
+
+net.setInput(blob)
+output = net.forward()
+
+# Parse detections (simplified — full parsing logic in YOLO docs)
+# output shape: [1, 84, 8400] for YOLOv8n
+# 84 = 4 bbox coords + 80 class scores
+boxes = output[0, :4, :].T  # [8400, 4]
+scores = output[0, 4:, :].max(axis=0)  # [8400]
+class_ids = output[0, 4:, :].argmax(axis=0)  # [8400]
+
+# Filter by confidence
+mask = scores > 0.5
+boxes = boxes[mask]
+scores = scores[mask]
+class_ids = class_ids[mask]
+
+print(f"Detected {len(boxes)} objects")
+for i, (box, score, cls) in enumerate(zip(boxes, scores, class_ids)):
+    print(f"  [{i}] class={cls} score={score:.2f} box={box}")</pre>
+
+<p style="color:var(--muted);">This code works identically in OpenCV 4 and 5. The difference: v5's new engine handles YOLOv8's dynamic output shapes natively — no manual reshape hack needed on some export variants.</p>
+</section>
+
+<section>
+<h2>Example 2: ResNet Image Classification</h2>
+
+<pre>import cv2
+import numpy as np
+
+net = cv2.dnn.readNet("resnet50.onnx")
+
+img = cv2.imread("cat.jpg")
+blob = cv2.dnn.blobFromImage(img, 1/255.0, (224, 224),
+                              mean=(0.485, 0.456, 0.406),  # ImageNet stats
+                              swapRB=True)
+
+net.setInput(blob)
+probs = net.forward()  # shape: [1, 1000]
+
+top5 = np.argsort(probs[0])[::-1][:5]
+for i, idx in enumerate(top5):
+    print(f"  Top {i+1}: class={idx} prob={probs[0][idx]:.4f}")</pre>
+</section>
+
+<section>
+<h2>Example 3: Vision Transformer (ViT) Inference</h2>
+
+<pre>import cv2
+import numpy as np
+
+net = cv2.dnn.readNet("vit_base_patch16_224.onnx")
+
+img = cv2.imread("dog.jpg")
+blob = cv2.dnn.blobFromImage(img, 1/255.0, (224, 224),
+                              mean=(0.5, 0.5, 0.5),
+                              swapRB=True)
+
+net.setInput(blob)
+output = net.forward()  # shape: [1, 1000]
+
+pred_class = np.argmax(output)
+print(f"Predicted class: {pred_class}, confidence: {output[0][pred_class]:.4f}")</pre>
+
+<p style="color:var(--muted);">ViT models often failed in OpenCV 4 due to unsupported attention operators. In v5, the new engine's attention fusion handles them — no more "Unsupported op type: Attention" errors.</p>
+</section>
+
+<section>
+<h2>Performance Benchmarks</h2>
+
+<table class="bench-table">
+<thead>
+<tr><th>Model</th><th>OpenCV 5 (new engine)</th><th>ONNX Runtime</th><th>OpenCV 4 (classic)</th></tr>
+</thead>
+<tbody>
+<tr><td>YOLOv8n</td><td style="color:var(--ok);">18.2 ms</td><td>23.5 ms</td><td style="color:var(--danger);">Failed</td></tr>
+<tr><td>ResNet50</td><td>12.1 ms</td><td style="color:var(--ok);">11.8 ms</td><td>14.3 ms</td></tr>
+<tr><td>XFeat</td><td style="color:var(--ok);">5.1 ms</td><td>5.7 ms</td><td style="color:var(--danger);">Failed</td></tr>
+<tr><td>DINOv2 (ViT-S)</td><td style="color:var(--ok);">34.7 ms</td><td>38.2 ms</td><td style="color:var(--danger);">Failed</td></tr>
+</tbody>
+</table>
+<p style="color:var(--muted);font-size:.85rem;">Benchmarked on Intel i7-13700K, Ubuntu 22.04. All numbers are single-thread inference time per image. <strong style="color:var(--warn);">Self-reported by OpenCV team</strong> — independent benchmarks pending. "Failed" = model did not load due to unsupported operators.</p>
+</section>
+
+<section>
+<h2>Fallback Strategy</h2>
+
+<div class="warn-box">
+  <h3>When the New Engine Fails</h3>
+  <p style="color:var(--muted);">
+    <strong>ENGINE_AUTO</strong> (default) tries the new engine first, falls back to classic silently.
+    But some models compile without error yet produce wrong output — the "silent killer" scenario.
+  </p>
+</div>
+
+<pre># Explicitly pin the classic engine for GPU inference
+net = cv2.dnn.readNet("model.onnx")
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_INFERENCE_ENGINE)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+
+# Or for CUDA (classic engine only in v5)
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+
+# Compare outputs between v4 and v5 before production switch
+# Run same model on both versions, assert np.allclose(out_v4, out_v5, atol=1e-4)</pre>
+</section>
+
+</main>
+
+<div class="related-links">
+  <p style="color:var(--muted);margin-bottom:1rem;">More from OpenCV 5 Guide:</p>
+  <a href="/install/">How to Install OpenCV 5</a>
+  <a href="/migration/">OpenCV 4 → 5 Migration Checklist</a>
+  <a href="/vs-opencv-4/">OpenCV 4 vs 5 Comparison</a>
+</div>
+
+<footer>
+  <p><a href="/">opencv5guide.com</a> — OpenCV 5 released June 2026. Benchmarks are self-reported; treat as directional.</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "OpenCV 5 DNN Tutorial — Run YOLOv8, ResNet, ViT with New Engine",
+  "description": "Hands-on OpenCV 5 DNN guide with complete code examples for YOLOv8 object detection, ResNet classification, and ViT inference using the new graph-based engine.",
+  "url": "https://opencv5guide.com/dnn/",
+  "datePublished": "2026-06-11",
+  "dateModified": "2026-06-11",
+  "author": {"@type": "Organization", "name": "opencv5guide", "url": "https://opencv5guide.com"}
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://opencv5guide.com/"},
+    {"@type": "ListItem", "position": 2, "name": "OpenCV 5 DNN Guide", "item": "https://opencv5guide.com/dnn/"}
+  ]
+}
+</script>
+
+</body>
+</html>
