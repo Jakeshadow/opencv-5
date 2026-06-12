@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenCV 5 Error Fixes — 10 Common Problems &amp; Solutions (2026)</title>
+<meta name="description" content="Fix OpenCV 5 errors: ModuleNotFoundError cv2, CvMat undefined, DNN model loading failed, GPU not working, pip install failed. Working fixes with code.">
+<meta property="og:title" content="OpenCV 5 Error Fixes — 10 Common Problems &amp; Solutions">
+<meta property="og:description" content="10 real OpenCV 5 errors with exact fix code. ModuleNotFoundError, DNN failures, missing modules, GPU issues — solved.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://opencv5guide.com/errors/">
+<meta property="og:site_name" content="OpenCV 5 Guide">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="OpenCV 5 Error Fixes — 10 Common Problems Solved">
+<meta name="twitter:description" content="ModuleNotFoundError, CvMat undefined, DNN model failures, pip install errors — all with fix code.">
+<link rel="canonical" href="https://opencv5guide.com/errors/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+<style>
+:root {
+  --bg: #0d1117; --surface: #161b22; --border: #30363d;
+  --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff;
+  --danger: #f85149; --warn: #d2991d; --ok: #3fb950;
+  --code-bg: #1c2128; --radius: 6px; --max-w: 820px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.65;
+  padding: 0 1rem 3rem;
+}
+nav {
+  max-width: var(--max-w); margin: 0 auto; padding: 1.2rem 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+}
+nav a { color: var(--muted); text-decoration: none; font-size: .9rem; }
+nav a:hover { color: var(--accent); }
+.logo { font-weight: 600; color: var(--text); font-size: 1rem; }
+.logo span { color: var(--ok); }
+main { max-width: var(--max-w); margin: 0 auto; }
+.hero { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+h1 { font-size: 2rem; line-height: 1.3; margin-bottom: .6rem; }
+h2 { font-size: 1.4rem; margin: 2.5rem 0 1rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .5rem; }
+p { margin-bottom: 1rem; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.2rem; overflow-x: auto;
+  font-size: .88rem; line-height: 1.55; margin: .8rem 0 1.2rem;
+}
+code { font-family: 'Roboto Mono', "SF Mono", "Fira Code", "Consolas", monospace; font-size: .88rem; }
+:not(pre) > code {
+  background: var(--code-bg); padding: .12rem .35rem; border-radius: 3px;
+  font-size: .85rem; border: 1px solid var(--border);
+}
+.err-msg {
+  background: rgba(248,81,73,0.08); border-left: 3px solid var(--danger);
+  padding: .6rem 1rem; border-radius: 0 var(--radius) var(--radius) 0;
+  font-family: 'Roboto Mono', "SF Mono", "Fira Code", "Consolas", monospace;
+  font-size: .85rem; color: var(--danger); margin: .5rem 0 1rem;
+}
+.fix-block {
+  background: rgba(63,185,80,0.06); border: 1px solid rgba(63,185,80,0.18);
+  border-radius: var(--radius); padding: 1rem 1.2rem; margin: .5rem 0 1.2rem;
+}
+.fix-block strong { color: var(--ok); }
+.related { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+.related h3 { font-size: 1rem; margin-bottom: .8rem; }
+.related-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.related-card {
+  display: block; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; color: var(--text); text-decoration: none;
+  transition: border-color .2s;
+}
+.related-card:hover { border-color: var(--accent); text-decoration: none; }
+.related-card strong { display: block; font-size: .92rem; margin-bottom: 4px; }
+.related-card span { font-size: .82rem; color: var(--muted); }
+footer {
+  max-width: var(--max-w); margin: 3rem auto 0; padding-top: 2rem;
+  border-top: 1px solid var(--border); text-align: center;
+  color: var(--muted); font-size: .85rem;
+}
+footer a { color: var(--muted); }
+footer a:hover { color: var(--accent); text-decoration: none; }
+@media (max-width: 640px) {
+  .related-grid { grid-template-columns: 1fr; }
+  h1 { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo"><a href="/" style="color:inherit;text-decoration:none;">OpenCV <span>5</span> Guide</a></div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <a href="/install/">Install</a>
+    <a href="/dnn/">DNN</a>
+    <a href="/migration/">Migration</a>
+    <a href="/errors/" style="color:var(--accent);">Errors</a>
+  </div>
+</nav>
+<main>
+<div class="hero">
+  <h1>OpenCV 5 Error Fixes: 10 Common Problems &amp; Solutions</h1>
+  <p style="color:var(--muted);font-size:1.05rem;">Every error below is real — pulled from actual OpenCV 5 upgrades. Each one includes the exact error message and the fix that works.</p>
+</div>
+
+<h2>1. ModuleNotFoundError: No module named 'cv2'</h2>
+<div class="err-msg">ModuleNotFoundError: No module named 'cv2'</div>
+<p><strong>Why:</strong> OpenCV 5 isn't installed, or you typed <code>pip install opencv</code> (wrong package name) or <code>import cv2</code> inside the wrong Python environment.</p>
+<div class="fix-block">
+  <strong>Fix:</strong>
+  <pre>pip install opencv-python
+# or with GUI support
+pip install opencv-python-headless
+
+# verify
+python -c "import cv2; print(cv2.__version__)"</pre>
+</div>
+<p>If you're in a virtual environment or conda, make sure it's activated first. <code>which python</code> (Linux/Mac) or <code>where python</code> (Windows) confirms you're in the right one.</p>
+
+<h2>2. 'CvMat' / 'IplImage' is not defined</h2>
+<div class="err-msg">error: 'CvMat' was not declared in this scope<br>error: 'IplImage' was not declared in this scope</div>
+<p><strong>Why:</strong> OpenCV 5 <strong>deleted the entire C API</strong>. <code>CvMat</code>, <code>IplImage</code>, <code>cvCreateMat()</code>, <code>cvFindContours()</code> — all gone. These were deprecated since OpenCV 2.x and are now removed.</p>
+<div class="fix-block">
+  <strong>Fix:</strong> Replace with C++ <code>cv::Mat</code>:
+  <pre>// Old (gone)
+IplImage* img = cvLoadImage("file.jpg");
+CvMat* mat = cvCreateMat(rows, cols, CV_32FC1);
+
+// New
+cv::Mat img = cv::imread("file.jpg");
+cv::Mat mat(rows, cols, CV_32FC1);</pre>
+  <p style="font-size:.85rem;color:var(--muted);">Note: <code>CV_8U</code>, <code>CV_32F</code>, <code>CV_64F</code> macros still work. Only the C structs and functions were removed.</p>
+</div>
+
+<h2>3. DNN model fails to load — Caffe / Darknet parsers removed</h2>
+<div class="err-msg">cv2.error: OpenCV(5.0.0) ... readNetFromCaffe is not available</div>
+<p><strong>Why:</strong> The Caffe and Darknet model parsers have been <strong>deleted</strong> in OpenCV 5. ONNX is now the only first-class model format.</p>
+<div class="fix-block">
+  <strong>Fix — Convert to ONNX first, then load:</strong>
+  <pre># Darknet → ONNX (via ultralytics)
+yolo export model=yolov8n.pt format=onnx
+
+# Caffe → ONNX
+pip install caffe-onnx
+python -m caffe_onnx deploy.prototxt weights.caffemodel model.onnx
+
+# Now load in OpenCV 5
+net = cv2.dnn.readNet("model.onnx")
+net = cv2.dnn.readNetFromONNX("model.onnx")</pre>
+</div>
+
+<h2>4. GPU inference not working with new DNN engine</h2>
+<div class="err-msg">RuntimeError: GPU backend not available for ENGINE_AUTO</div>
+<p><strong>Why:</strong> OpenCV 5's new default DNN engine is <strong>CPU-only</strong>. GPU support is on the roadmap but not shipped yet.</p>
+<div class="fix-block">
+  <strong>Fix — Switch engine for GPU:</strong>
+  <pre># Option 1: Force classic engine (CUDA works)
+net = cv2.dnn.readNet("model.onnx", engine=cv2.dnn.ENGINE_CLASSIC)
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
+
+# Option 2: Use ONNX Runtime (GPU)
+net = cv2.dnn.readNet("model.onnx", engine=cv2.dnn.ENGINE_ORT)</pre>
+</div>
+<p>Or set environment variable: <code>OPENCV_FORCE_DNN_ENGINE=1</code> (forces classic engine globally).</p>
+
+<h2>5. ml / gapi / Haar Cascade / HOG module not found</h2>
+<div class="err-msg">ModuleNotFoundError: No module named 'cv2.ml'<br>AttributeError: module 'cv2' has no attribute 'ml'</div>
+<p><strong>Why:</strong> These modules moved from <code>opencv-python</code> to <strong>opencv-contrib-python</strong> in v5.</p>
+<div class="fix-block">
+  <strong>Fix:</strong>
+  <pre># Uninstall base version
+pip uninstall opencv-python opencv-contrib-python
+
+# Install contrib (includes everything)
+pip install opencv-contrib-python
+
+# For ml module: consider scikit-learn instead
+from sklearn.svm import SVC  # replaces cv2.ml.SVM</pre>
+</div>
+<p>Moved to contrib: <code>ml</code>, <code>gapi</code>, <code>xobjdetect</code> (Haar/HOG), <code>ximgproc</code>, <code>xfeatures2d</code>.</p>
+
+<h2>6. calib3d / features2d header not found</h2>
+<div class="err-msg">fatal error: opencv2/features2d.hpp: No such file or directory</div>
+<p><strong>Why:</strong> <code>calib3d</code> was split into 4 modules; <code>features2d</code> was renamed to <code>features</code>. Most C++/Python code still works through compatibility headers, but Java imports break.</p>
+<div class="fix-block">
+  <strong>Fix:</strong>
+  <pre>// C++ — old headers still work (compatibility shim)
+#include &lt;opencv2/calib3d.hpp&gt;  // OK
+#include &lt;opencv2/features2d.hpp&gt; // OK (redirects to features)
+
+// Java — update import
+import org.opencv.features.*;  // was features2d
+
+// Python — no change needed for existing code</pre>
+</div>
+
+<h2>7. VideoCapture::get() returns -1 instead of 0</h2>
+<p><strong>Why:</strong> When a video property isn't supported, OpenCV 5 returns <code>-1</code> instead of <code>0</code>. This was changed because <code>0</code> is a valid value for some properties (e.g., auto-focus off).</p>
+<div class="fix-block">
+  <strong>Fix — Update your check:</strong>
+  <pre>val = cap.get(cv2.CAP_PROP_AUTOFOCUS)
+# Old check (broken in v5)
+if val == 0: ...
+
+# New check
+if val < 0:  # explicitly unsupported
+    print("Property not supported")</pre>
+</div>
+
+<h2>8. Compile error: C++17 required</h2>
+<div class="err-msg">error: 'std::optional' is only available with C++17 or later</div>
+<p><strong>Why:</strong> OpenCV 5 mandates <strong>C++17</strong>. GCC &lt; 8 and Clang &lt; 9 will fail.</p>
+<div class="fix-block">
+  <strong>Fix — CMakeLists.txt:</strong>
+  <pre>set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)</pre>
+  <p style="font-size:.85rem;color:var(--muted);">Minimum: GCC 8+, Clang 9+, MSVC 2017 19.14+, Apple Clang 12+.</p>
+</div>
+
+<h2>9. Vector-to-Mat layout changed (0D/1D arrays)</h2>
+<div class="err-msg"><!-- No error — silent logic change. Your .rows check returns wrong value. --></div>
+<p><strong>Why:</strong> In OpenCV 4, <code>std::vector → cv::Mat</code> created an N×1 matrix (2D). In OpenCV 5, it creates a true 1D array. Code relying on <code>.rows</code> or <code>.cols</code> will silently break.</p>
+<div class="fix-block">
+  <strong>Fix:</strong>
+  <pre>std::vector&lt;float&gt; v = {1, 2, 3};
+cv::Mat m(v);
+
+// v4: m.dims==2, m.rows==3, m.cols==1
+// v5: m.dims==1, m.rows==1, m.cols==3
+
+// Use .total() instead of .rows for element count
+size_t n = m.total();  // works in both v4 and v5
+
+// If you need a column vector explicitly:
+cv::Mat col = cv::Mat(v).reshape(1, (int)v.size());</pre>
+</div>
+
+<h2>10. New data types break switch statements</h2>
+<div class="err-msg">CV_Error: Unsupported format in function '...'</div>
+<p><strong>Why:</strong> OpenCV 5 added 5 new data types — <code>CV_16BF</code>, <code>CV_32U</code>, <code>CV_64U</code>, <code>CV_64S</code>, <code>CV_Bool</code>. If you have a <code>switch(mat.depth())</code> without a default branch, it may crash on these.</p>
+<div class="fix-block">
+  <strong>Fix — Add a default branch:</strong>
+  <pre>switch (mat.depth()) {
+    case CV_8U:  /* ... */ break;
+    case CV_32F: /* ... */ break;
+    case CV_64F: /* ... */ break;
+    default:
+        CV_Error(cv::Error::StsUnsupportedFormat,
+                 "Unsupported depth");
+}</pre>
+</div>
+
+<div class="related">
+  <h3>Related Guides</h3>
+  <div class="related-grid">
+    <a class="related-card" href="/migration/"><strong>v4 → v5 Migration Checklist</strong><span>Full migration plan with 10 pitfalls</span></a>
+    <a class="related-card" href="/install/"><strong>Install OpenCV 5</strong><span>pip, Docker, source build</span></a>
+    <a class="related-card" href="/dnn/"><strong>DNN Module Changes</strong><span>ONNX engine, YOLO, GPU setup</span></a>
+    <a class="related-card" href="/benchmarks/"><strong>Performance Benchmarks</strong><span>v4 vs v5 speed comparison</span></a>
+  </div>
+</div>
+</main>
+<footer>
+  <p><a href="/">OpenCV 5 Guide</a> &middot; <a href="/install/">Install</a> &middot; <a href="/dnn/">DNN</a> &middot; <a href="/migration/">Migration</a> &middot; <a href="/errors/">Errors</a> &middot; <a href="/benchmarks/">Benchmarks</a> &middot; <a href="/onnx-models/">ONNX Models</a></p>
+  <p style="margin-top:8px;">Updated June 12, 2026 — OpenCV 5 release window</p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "OpenCV 5 Error Fixes — 10 Common Problems & Solutions",
+  "description": "Fix OpenCV 5 errors with working code. Covers ModuleNotFoundError, CvMat undefined, DNN model failures, GPU issues, C++17 requirement, and more.",
+  "author": { "@type": "Organization", "name": "OpenCV 5 Guide" },
+  "datePublished": "2026-06-12",
+  "dateModified": "2026-06-12",
+  "isAccessibleForFree": true,
+  "isPartOf": { "@type": "WebSite", "url": "https://opencv5guide.com/", "name": "OpenCV 5 Guide" }
+}
+</script>
+</body>
+</html>
