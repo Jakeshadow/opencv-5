@@ -139,6 +139,10 @@ footer {
     native LLM/VLM inference ships built-in, and the classic engine stays as fallback.
     <span class="eta">Released June 6, 2026</span> — 9 API changes ranked P0→P2, honest about what's still CPU-only.
   </p>
+  <div style="background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.2);border-radius:var(--radius);padding:1rem 1.3rem;margin-top:1rem;text-align:center;">
+    <strong style="color:var(--ok);font-size:1.1rem;">OpenCV 5 was released June 6, 2026</strong>
+    <p style="color:var(--muted);margin:.3rem 0 0;font-size:.9rem;">Available via pip (June 8), conda-forge, and source build. <a href="/install/">Install guide</a> for all platforms.</p>
+  </div>
 </section>
 
 <section id="what">
@@ -471,8 +475,19 @@ conda list --export > conda-snapshot.txt
   "image": "https://opencv5guide.com/assets/og-image.svg",
   "url": "https://opencv5guide.com",
   "datePublished": "2026-06-10T00:00:00+00:00",
-  "dateModified": "2026-06-10T00:00:00+00:00",
-  "author": {"@type": "Organization", "name": "opencv5guide", "url": "https://opencv5guide.com"}
+  "dateModified": "2026-06-12T00:00:00+00:00",
+  "author": {"@type": "Organization", "name": "opencv5guide", "url": "https://opencv5guide.com"},
+  "sameAs": [
+    "https://github.com/opencv/opencv",
+    "https://opencv.org",
+    "https://docs.opencv.org"
+  ],
+  "hasPart": [
+    {"@type": "Article", "headline": "How to Install OpenCV 5", "url": "https://opencv5guide.com/install/"},
+    {"@type": "Article", "headline": "OpenCV 5 DNN Tutorial", "url": "https://opencv5guide.com/dnn/"},
+    {"@type": "Article", "headline": "OpenCV 4 to 5 Migration Checklist", "url": "https://opencv5guide.com/migration/"},
+    {"@type": "Article", "headline": "OpenCV 4 vs 5 Comparison", "url": "https://opencv5guide.com/vs-opencv-4/"}
+  ]
 }
 </script>
 
@@ -511,6 +526,33 @@ conda list --export > conda-snapshot.txt
     {"@type": "Question", "name": "ImportError: libstdc++.so.6 version GLIBCXX_3.4.29 not found when importing cv2 on Linux", "acceptedAnswer": {"@type": "Answer", "text": "OpenCV 5 wheels are compiled with C++17 and need newer libstdc++ than what ships on older LTS distros (Ubuntu 20.04, CentOS 7). Install gcc-12/g++-12, use conda libstdcxx-ng, or switch Docker base to ubuntu:22.04+."}},
     {"@type": "Question", "name": "cv2.setNumThreads() has no effect on the new DNN engine — all CPU cores are maxed out", "acceptedAnswer": {"@type": "Answer", "text": "The new graph-based DNN engine manages its own thread pool and may not respect cv2.setNumThreads(). This causes CPU oversubscription. Configure thread count via the engine's own config or fall back to ENGINE_CLASSIC. This is a known gap in v5.0."}}
   ]
+}
+</script>
+
+<!-- Organization Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "OpenCV 5 Guide",
+  "url": "https://opencv5guide.com",
+  "description": "Independent community guide to OpenCV 5 — new features, migration guides, and hands-on DNN tutorials",
+  "sameAs": [
+    "https://github.com/opencv/opencv",
+    "https://opencv.org"
+  ]
+}
+</script>
+
+<!-- WebSite Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "OpenCV 5 Guide",
+  "url": "https://opencv5guide.com",
+  "description": "OpenCV 5 new features, install guide, DNN tutorial, migration checklist, and OpenCV 4 vs 5 comparison",
+  "inLanguage": "en"
 }
 </script>
 
